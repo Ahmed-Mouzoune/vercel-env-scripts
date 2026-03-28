@@ -1,24 +1,42 @@
 # vercel-env-scripts
 
-Two Bash scripts to manage Vercel environment variables from the command line — pull them from a remote environment into a local file, or push a local .env file to a remote environment.
+Two scripts to manage Vercel environment variables from the command line — pull them from a remote environment into a local file, or push a local `.env` file to a remote environment.
 
 Both scripts are built on top of the Vercel CLI (not the REST API). See [Why the CLI and not the API?](#why-the-cli-and-not-the-api) at the bottom for the reasoning.
 
 **Requirements:** Vercel CLI must be installed. Authentication can be done either via `vercel login` or by providing a Vercel token.
 
+## Platform support
+
+| Platform | Location | Shell |
+|----------|----------|-------|
+| Linux / macOS | `scripts/linux/` | POSIX-compatible `sh` (works with `sh`, `dash`, `ash`, `a-Shell`) |
+| Windows | `scripts/windows/` | PowerShell (`.ps1`) |
+
 ## Scripts
 
 | Script | Description |
 |--------|-------------|
-| `vercel-pull-env.sh` | Fetch env vars from a remote Vercel environment → local file |
-| `vercel-push-env.sh` | Push env vars from a local file → remote Vercel environment |
+| `vercel-pull-env` | Fetch env vars from a remote Vercel environment → local file |
+| `vercel-push-env` | Push env vars from a local file → remote Vercel environment |
 
 ## Setup
+
+### Linux / macOS
 
 ```bash
 git clone https://github.com/<your-username>/vercel-env-scripts.git
 cd vercel-env-scripts
-chmod +x vercel-pull-env.sh vercel-push-env.sh
+chmod +x scripts/linux/vercel-pull-env.sh scripts/linux/vercel-push-env.sh
+```
+
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/<your-username>/vercel-env-scripts.git
+cd vercel-env-scripts
+# Allow local scripts to run (once per machine)
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 ```
 
 ### Install the Vercel CLI
@@ -43,53 +61,81 @@ No token to manage, no environment variable to export. The CLI handles authentic
 Generate a token at https://vercel.com/account/tokens, then use it in one of three ways:
 
 ```bash
-# Method 1: Environment variable
+# Linux/macOS — Method 1: environment variable
 export VERCEL_TOKEN="your_vercel_token_here"
-./vercel-pull-env.sh -p my-project -e production
+sh scripts/linux/vercel-pull-env.sh -p my-project -e production
 
-# Method 2: CLI parameter
-./vercel-pull-env.sh -p my-project -e production -t "your_token"
-
-# Method 3: From a local .env file (don't commit this!)
-source .env.local  # contains VERCEL_TOKEN=...
-./vercel-pull-env.sh -p my-project -e production
+# Linux/macOS — Method 2: CLI parameter
+sh scripts/linux/vercel-pull-env.sh -p my-project -e production -t "your_token"
 ```
 
-## vercel-pull-env.sh
+```powershell
+# Windows — Method 1: environment variable
+$env:VERCEL_TOKEN = "your_vercel_token_here"
+.\scripts\windows\vercel-pull-env.ps1 -Project my-project -Environment production
+
+# Windows — Method 2: CLI parameter
+.\scripts\windows\vercel-pull-env.ps1 -Project my-project -Environment production -Token "your_token"
+```
+
+## vercel-pull-env
 
 Fetches all environment variables for a given Vercel environment and writes them to a local file.
 
 ### Usage
 
+**Linux / macOS**
 ```bash
-./vercel-pull-env.sh [options]
+sh scripts/linux/vercel-pull-env.sh [options]
+```
+
+**Windows**
+```powershell
+.\scripts\windows\vercel-pull-env.ps1 [options]
 ```
 
 ### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-p, --project <PROJECT>` | Project name or ID | *required* |
-| `-e, --env <ENV>` | Target environment: `production` \| `preview` \| `development` \| `<custom>` | `production` |
-| `-o, --output <FILE>` | Output file | `.env.pulled` |
-| `-t, --token <TOKEN>` | Vercel authentication token (or use `$VERCEL_TOKEN`) | - |
-| `-h, --help` | Show help | - |
+| Linux flag | Windows flag | Description | Default |
+|------------|--------------|-------------|---------|
+| `-p, --project <PROJECT>` | `-Project <PROJECT>` | Project name or ID | *required* |
+| `-e, --env <ENV>` | `-Environment <ENV>` | Target environment: `production` \| `preview` \| `development` \| `<custom>` | `production` |
+| `-o, --output <FILE>` | `-Output <FILE>` | Output file | `.env.pulled` |
+| `-t, --token <TOKEN>` | `-Token <TOKEN>` | Vercel authentication token (or use `$VERCEL_TOKEN`) | - |
+| `-h, --help` | `Get-Help` | Show help | - |
 
 ### Examples
 
+**Linux / macOS**
 ```bash
 # Pull production vars (using vercel login session)
-./vercel-pull-env.sh -p my-project -e production -o .env.production
+sh scripts/linux/vercel-pull-env.sh -p my-project -e production -o .env.production
 
 # Pull using a token
-./vercel-pull-env.sh -p my-project -e production -o .env.production -t "your_token"
+sh scripts/linux/vercel-pull-env.sh -p my-project -e production -o .env.production -t "your_token"
 
 # Pull a custom environment (e.g. staging)
-./vercel-pull-env.sh -p my-project -e staging -o .env.staging
+sh scripts/linux/vercel-pull-env.sh -p my-project -e staging -o .env.staging
 
 # Pull preview vars with token from environment variable
 export VERCEL_TOKEN="your_token"
-./vercel-pull-env.sh -p my-project -e preview -o .env.preview
+sh scripts/linux/vercel-pull-env.sh -p my-project -e preview -o .env.preview
+```
+
+**Windows**
+```powershell
+# Pull production vars (using vercel login session)
+.\scripts\windows\vercel-pull-env.ps1 -Project my-project -Environment production -Output .env.production
+
+# Pull using a token
+.\scripts\windows\vercel-pull-env.ps1 -Project my-project -Environment production -Output .env.production -Token "your_token"
+
+# Pull a custom environment (e.g. staging)
+.\scripts\windows\vercel-pull-env.ps1 -Project my-project -Environment staging -Output .env.staging
+
+# Pull preview vars with token from environment variable
+$env:VERCEL_TOKEN = "your_token"
+.\scripts\windows\vercel-pull-env.ps1 -Project my-project -Environment preview -Output .env.preview
 ```
 
 ### Output
@@ -97,59 +143,88 @@ export VERCEL_TOKEN="your_token"
 The script writes a `.env`-formatted file and prints a summary with keys only (values are masked in the terminal):
 
 ```
-[INFO] Récupération des variables du projet 'my-project' (env: staging)...
-[OK] 12 variable(s) écrite(s) dans .env.staging
+[INFO] Fetching variables for project 'my-project' (env: staging)...
+[OK] 12 variable(s) written to .env.staging
 
-Aperçu (valeurs masquées) :
+Preview (values masked):
   DATABASE_URL                              = ***
   NEXT_PUBLIC_API_URL                       = ***
   SECRET_KEY                                = ***
   ...
 ```
 
-## vercel-push-env.sh
+## vercel-push-env
 
 Reads a local `.env` file and pushes each variable to the specified Vercel environment.
 
 ### Usage
 
+**Linux / macOS**
 ```bash
-./vercel-push-env.sh [options]
+sh scripts/linux/vercel-push-env.sh [options]
+```
+
+**Windows**
+```powershell
+.\scripts\windows\vercel-push-env.ps1 [options]
 ```
 
 ### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-p, --project <PROJECT>` | Project name or ID | *required* |
-| `-e, --env <ENV>` | Target environment: `production` \| `preview` \| `development` \| `<custom>` | `production` |
-| `-f, --file <FILE>` | Source file | `.env` |
-| `-t, --token <TOKEN>` | Vercel authentication token (or use `$VERCEL_TOKEN`) | - |
-| `--dry-run` | Simulate without pushing anything | `false` |
-| `--overwrite` | Overwrite existing variables | `false` |
-| `-h, --help` | Show help | - |
+| Linux flag | Windows flag | Description | Default |
+|------------|--------------|-------------|---------|
+| `-p, --project <PROJECT>` | `-Project <PROJECT>` | Project name or ID | *required* |
+| `-e, --env <ENV>` | `-Environment <ENV>` | Target environment: `production` \| `preview` \| `development` \| `<custom>` | `production` |
+| `-f, --file <FILE>` | `-File <FILE>` | Source file | `.env` |
+| `-t, --token <TOKEN>` | `-Token <TOKEN>` | Vercel authentication token (or use `$VERCEL_TOKEN`) | - |
+| `--dry-run` | `-DryRun` | Simulate without pushing anything | `false` |
+| `--overwrite` | `-Overwrite` | Overwrite existing variables | `false` |
+| `-h, --help` | `Get-Help` | Show help | - |
 
 ### Examples
 
+**Linux / macOS**
 ```bash
 # Push .env.production to production (using vercel login session)
-./vercel-push-env.sh -p my-project -e production -f .env.production
+sh scripts/linux/vercel-push-env.sh -p my-project -e production -f .env.production
 
 # Push using a token
-./vercel-push-env.sh -p my-project -e production -f .env.production -t "your_token"
+sh scripts/linux/vercel-push-env.sh -p my-project -e production -f .env.production -t "your_token"
 
 # Push to a custom environment (e.g. staging)
-./vercel-push-env.sh -p my-project -e staging -f .env.staging
+sh scripts/linux/vercel-push-env.sh -p my-project -e staging -f .env.staging
 
 # Push and overwrite existing vars
-./vercel-push-env.sh -p my-project -e production -f .env.production --overwrite
+sh scripts/linux/vercel-push-env.sh -p my-project -e production -f .env.production --overwrite
 
 # Dry-run: see what would be pushed without touching anything
-./vercel-push-env.sh -p my-project -e staging -f .env --dry-run
+sh scripts/linux/vercel-push-env.sh -p my-project -e staging -f .env --dry-run
 
 # CI/CD usage with token
 export VERCEL_TOKEN="${CI_VERCEL_TOKEN}"
-./vercel-push-env.sh -p my-project -e production -f .env.production --overwrite
+sh scripts/linux/vercel-push-env.sh -p my-project -e production -f .env.production --overwrite
+```
+
+**Windows**
+```powershell
+# Push .env.production to production
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment production -File .env.production
+
+# Push using a token
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment production -File .env.production -Token "your_token"
+
+# Push to a custom environment (e.g. staging)
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment staging -File .env.staging
+
+# Push and overwrite existing vars
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment production -File .env.production -Overwrite
+
+# Dry-run: see what would be pushed without touching anything
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment staging -File .env -DryRun
+
+# CI/CD usage with token
+$env:VERCEL_TOKEN = $env:CI_VERCEL_TOKEN
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment production -File .env.production -Overwrite
 ```
 
 ### Source file format
@@ -172,86 +247,127 @@ Lines starting with `#` and empty lines are skipped. Surrounding quotes (`"value
 ║  Vercel Push Env — 14:32:15              ║
 ╚══════════════════════════════════════════╝
 
-[INFO] Récupération des vars existantes sur 'staging'...
-[INFO] 3 variable(s) déjà présente(s) pour 'staging'.
+[INFO] Fetching existing vars on 'staging'...
+[INFO] 3 variable(s) already present for 'staging'.
 
-[INFO] Lecture de '.env.staging'...
+[INFO] Reading '.env.staging'...
 
-[OK] CRÉÉE DATABASE_URL
-[OK] CRÉÉE NEXT_PUBLIC_API_URL
-[SKIP] SECRET_KEY (existe déjà — utilisez --overwrite pour écraser)
-[OK] MISE À JOUR ANOTHER_VAR
+[OK] CREATED DATABASE_URL
+[OK] CREATED NEXT_PUBLIC_API_URL
+[SKIP] SECRET_KEY (already exists — use --overwrite to replace)
+[OK] UPDATED ANOTHER_VAR
 
-──────────────── Résumé ────────────────
-[OK] Créées      : 8
-[OK] Mises à jour : 1
-[WARN] Ignorées     : 3
-────────────────────────────────────────
+──────────────── Summary ────────────────
+[OK] Created  : 8
+[OK] Updated  : 1
+[WARN] Skipped  : 3
+─────────────────────────────────────────
 ```
 
 ## Common workflows
 
 ### Copy vars from one environment to another
 
+**Linux / macOS**
 ```bash
 # 1. Pull from production
-./vercel-pull-env.sh -p my-project -e production -o .env.production
+sh scripts/linux/vercel-pull-env.sh -p my-project -e production -o .env.production
 
 # 2. Review, then push to staging
-./vercel-push-env.sh -p my-project -e staging -f .env.production --dry-run
-./vercel-push-env.sh -p my-project -e staging -f .env.production --overwrite
+sh scripts/linux/vercel-push-env.sh -p my-project -e staging -f .env.production --dry-run
+sh scripts/linux/vercel-push-env.sh -p my-project -e staging -f .env.production --overwrite
+```
+
+**Windows**
+```powershell
+.\scripts\windows\vercel-pull-env.ps1 -Project my-project -Environment production -Output .env.production
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment staging -File .env.production -DryRun
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment staging -File .env.production -Overwrite
 ```
 
 ### Sync vars across multiple projects
 
+**Linux / macOS**
 ```bash
 for project in project-a project-b project-c; do
-  ./vercel-push-env.sh -p "$project" -e production -f .env.shared --overwrite
+  sh scripts/linux/vercel-push-env.sh -p "$project" -e production -f .env.shared --overwrite
 done
+```
+
+**Windows**
+```powershell
+foreach ($project in @("project-a", "project-b", "project-c")) {
+    .\scripts\windows\vercel-push-env.ps1 -Project $project -Environment production -File .env.shared -Overwrite
+}
 ```
 
 ### Bootstrap a new project from an existing one
 
+**Linux / macOS**
 ```bash
-./vercel-pull-env.sh -p existing-project -e production -o .env.base
+sh scripts/linux/vercel-pull-env.sh -p existing-project -e production -o .env.base
 # Edit .env.base as needed
-./vercel-push-env.sh -p new-project -e production -f .env.base
+sh scripts/linux/vercel-push-env.sh -p new-project -e production -f .env.base
+```
+
+**Windows**
+```powershell
+.\scripts\windows\vercel-pull-env.ps1 -Project existing-project -Environment production -Output .env.base
+# Edit .env.base as needed
+.\scripts\windows\vercel-push-env.ps1 -Project new-project -Environment production -File .env.base
 ```
 
 ### CI/CD automation
 
+**Linux / macOS**
 ```bash
-#!/bin/bash
+#!/bin/sh
 # deploy-env.sh
 
-# Token should be stored in CI/CD secrets
 export VERCEL_TOKEN="${CI_VERCEL_TOKEN}"
 
 # Pull production vars
-./vercel-pull-env.sh -p my-app -e production -o .env.production
+sh scripts/linux/vercel-pull-env.sh -p my-app -e production -o .env.production
 
 # Add build-specific vars
-echo "BUILD_ID=$(git rev-parse HEAD)" >> .env.production
-echo "DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .env.production
+printf 'BUILD_ID=%s\n' "$(git rev-parse HEAD)"              >> .env.production
+printf 'DEPLOY_TIME=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .env.production
 
 # Push to preview environment
-./vercel-push-env.sh -p my-app -e preview -f .env.production --overwrite
+sh scripts/linux/vercel-push-env.sh -p my-app -e preview -f .env.production --overwrite
+```
+
+**Windows**
+```powershell
+$env:VERCEL_TOKEN = $env:CI_VERCEL_TOKEN
+
+.\scripts\windows\vercel-pull-env.ps1 -Project my-app -Environment production -Output .env.production
+
+Add-Content .env.production "BUILD_ID=$(git rev-parse HEAD)"
+Add-Content .env.production "DEPLOY_TIME=$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))"
+
+.\scripts\windows\vercel-push-env.ps1 -Project my-app -Environment preview -File .env.production -Overwrite
 ```
 
 ### Backup before updates
 
+**Linux / macOS**
 ```bash
 # Backup current vars
-./vercel-pull-env.sh -p my-project -e production -o backup-$(date +%Y%m%d).env
+sh scripts/linux/vercel-pull-env.sh -p my-project -e production -o "backup-$(date +%Y%m%d).env"
 
-# Make changes locally
-vim .env.production
+# Make changes locally, test with dry-run, then apply
+sh scripts/linux/vercel-push-env.sh -p my-project -e production -f .env.production --dry-run
+sh scripts/linux/vercel-push-env.sh -p my-project -e production -f .env.production --overwrite
+```
 
-# Test with dry-run
-./vercel-push-env.sh -p my-project -e production -f .env.production --dry-run
+**Windows**
+```powershell
+$date = Get-Date -Format 'yyyyMMdd'
+.\scripts\windows\vercel-pull-env.ps1 -Project my-project -Environment production -Output "backup-$date.env"
 
-# Apply changes
-./vercel-push-env.sh -p my-project -e production -f .env.production --overwrite
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment production -File .env.production -DryRun
+.\scripts\windows\vercel-push-env.ps1 -Project my-project -Environment production -File .env.production -Overwrite
 ```
 
 ## Security best practices
@@ -271,28 +387,33 @@ vim .env.production
 
 ## Troubleshooting
 
-### "vercel CLI introuvable"
+### "'vercel' CLI not found"
 ```bash
 npm install -g vercel
 ```
 
-### "Vous n'êtes pas connecté"
+### "Not logged in"
 ```bash
 # Option 1: Interactive login
 vercel login
 
 # Option 2: Use a token
-export VERCEL_TOKEN="your_token"
-./vercel-pull-env.sh -p my-project -e production
+export VERCEL_TOKEN="your_token"      # Linux/macOS
+$env:VERCEL_TOKEN = "your_token"      # Windows
 ```
 
-### "Token invalide ou expiré"
+### "Invalid or expired token"
 Generate a new token at https://vercel.com/account/tokens
 
 ### Variables not appearing after push
 Wait a few seconds, then verify:
 ```bash
 vercel env ls --project my-project
+```
+
+### Windows: "running scripts is disabled on this system"
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 ```
 
 ## Why the CLI and not the API?
